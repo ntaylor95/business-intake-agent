@@ -41,28 +41,96 @@ Also surface (do not stop on):
 
 If any of these are missing on a code-generation spec, warn the user but allow the user to proceed.
 
-## Step 3: Pre-flight check the runtime environment (host-side guard)
+## Step 3: Detect and validate the runtime environment (tiered)
 
-This pipeline runs *inside* the Docker `dev` container per `CLAUDE.md` (Node 20, npm, git, curl, `uv` pre-installed). Probing on the host is the failure mode CLAUDE.md cites — the host typically has a different Node version (or none), `uv` is missing, etc.
+Pre-flight checks that the host has *somewhere* to run build commands (npm install, pytest, etc.) before the orchestrator writes any files. Three tiers, checked in order — pick the highest tier that works.
 
-Run these guards before invoking the orchestrator agent — they fail fast without spending an agent invocation.
+### Tier 1: Docker dev container (preferred when available)
+
+The repo ships with `Dockerfile` + `docker-compose.yml` providing a known-good environment.
+
+```bash
+docker --version && docker compose version
+```
+
+If both succeed, Docker is available:
 
 1. **Dev service running?**
    ```bash
    docker compose ps --services --filter "status=running" | grep -q '^dev$'
    ```
-   Non-zero → halt:
-   > ⛔ Cannot start pipeline. The `dev` service is not running.
-   > Run `docker compose up -d` from the repo root, then re-invoke `/orchestrator`.
+   If zero, try to start it:
+   ```bash
+   docker compose up -d
+   ```
+   If that fails too, fall through to Tier 2 — don't keep the user stuck on a broken Docker install.
 
 2. **Exec works?**
    ```bash
    docker compose exec -T dev true
    ```
-   Non-zero → halt:
-   > ⛔ Cannot exec into the `dev` container. Run `docker compose down && docker compose up -d` and retry.
+   Non-zero → halt with: *"⛔ Cannot exec into the `dev` container. Run `docker compose down && docker compose up -d` and retry."*
 
-Pass the container-up confirmation forward in Step 4's briefing — the orchestrator agent must run its own pre-flight probes via `docker compose exec -T dev <command>`, not on the host.
+Pass `tier=docker` to Step 4. The orchestrator agent wraps all build calls with `docker compose exec -T dev <command>`.
+
+### Tier 2: Host-native tools (fallback when Docker is absent)
+
+If Docker isn't installed, check whether the host has the tools the spec actually needs.
+
+From the validated spec (Step 2), determine required tools:
+
+- **React / Vite / TypeScript spec** → needs `node` (20+) and `npm`
+- **Python / FastAPI / MCP / pytest spec** → needs `python3` (3.11+) and `uv`
+- **Both** → both sets must be available
+
+Probe:
+
+```bash
+node --version 2>/dev/null
+npm --version 2>/dev/null
+python3 --version 2>/dev/null
+uv --version 2>/dev/null
+```
+
+If ALL required tools are present with sufficient versions (Node ≥ 20, Python ≥ 3.11), pass `tier=host-native` to Step 4. The agent runs build commands directly on the host shell.
+
+If some required tools are missing or versions are too old, fall through to Tier 3 — do NOT proceed half-equipped.
+
+### Tier 3: Cloud fallback — GitHub Codespaces
+
+If neither Docker nor sufficient host-native tools are available, halt with a friendly handoff to Codespaces. The repo ships with `.devcontainer/devcontainer.json` pre-configured (Node 20, Python 3.11, uv, Claude Code extension auto-installed).
+
+Detect the repo URL:
+
+```bash
+git remote get-url origin
+```
+
+Parse `<owner>/<repo>` (handles both `https://github.com/<owner>/<repo>.git` and `git@github.com:<owner>/<repo>.git` forms).
+
+Then surface this message to the user verbatim:
+
+> 👋 This build needs Node.js, Python, or Docker — and your computer doesn't have any of them installed yet. **Not a problem.**
+>
+> **Fastest fix:** open this project in GitHub Codespaces. It's a free, cloud-based dev environment that's already pre-configured for this pipeline.
+>
+> **Step 1.** Open this URL in your browser:
+>
+> `https://codespaces.new/<owner>/<repo>?quickstart=1`
+>
+> **Step 2.** Wait about 30 seconds while Codespaces sets up. Everything you need (Node, Python, Claude Code) is pre-installed.
+>
+> **Step 3.** Once Codespaces opens, look for the Claude Code icon in the left sidebar. Click it and re-run `/orchestrator <your-spec-path>`. The pipeline will pick up from there.
+>
+> Your spec, brief, proposal, and decision log are all in this repo already — they'll be there when Codespaces opens.
+
+Halt the orchestrator — do NOT invoke the orchestrator agent. Step 3 ends here for Tier 3.
+
+### Notes on the tier decision
+
+- The chosen tier is passed forward to Step 4 so the orchestrator agent knows whether to wrap commands in `docker compose exec -T dev` (Tier 1) or run them directly (Tier 2). Tier 3 never reaches Step 4.
+- **Do not silently downgrade between tiers when a higher tier was *attempted but failed*.** If Tier 1 was attempted (Docker present) but the dev container failed to start with `up -d`, that's a Tier 1 broken state — fall through to Tier 2 only if no Docker daemon is reachable at all.
+- **Tier 2 is the realistic default for many developers** (Macs with prior Node/Python installs). Tier 3 is for greenfield machines, especially business users with no dev tooling.
 
 ## Step 4: Hand off to the orchestrator agent
 
@@ -75,7 +143,7 @@ Invoke the orchestrator agent via the Agent tool:
   - An instruction to run the pipeline per `.claude/agents/orchestrator.md`'s defined order: pm → architect → executor (+ mid-level-engineer as needed) → tester → reviewer → self-update
   - The retry budgets from `CLAUDE.md`: 3 executor retries on tester fail, 2 on reviewer fail
   - The authority model: do NOT auto-commit changes to `.claude/agents/*.md` or `CLAUDE.md`; stage them in a `self-update/<date>-<desc>` git branch and add them to the JIRA artifact at `docs/self-update-<date>-<desc>.md`
-  - Confirmation that the dev container is running and `docker compose exec` works — the agent must run all environment probes (and any other host-tool calls) inside the container with `docker compose exec -T dev …`
+  - **Runtime tier from Step 3 (`docker` or `host-native`).** If `tier=docker`, the agent must wrap all environment probes and build calls with `docker compose exec -T dev <command>` (the dev container is already up and exec-tested). If `tier=host-native`, the agent runs commands directly on the host shell — no `docker compose` wrapper. Tier 3 (Codespaces handoff) never reaches Step 4; the user is in a different environment by the time they re-invoke.
   - Any explicit user constraints from this turn that aren't already in the spec (e.g., "skip the self-update step", "stop after the executor finishes")
 
 Run the orchestrator agent in the foreground — its results are needed before reporting back to the user.

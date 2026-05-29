@@ -184,7 +184,17 @@ npm create vite@latest <project-name> -- --template react-ts
 cd <project-name> && npm install
 ```
 
-**Runtime environment:** the `Dockerfile` and `docker-compose.yml` at the repo root provide a Node 20 + npm container with git and curl. The user runs `docker compose up -d` then `docker compose exec dev bash` to get an environment with everything needed. Pipeline pre-flight should probe inside this container, not on the host.
+**Runtime environment (three tiers, automatically detected at orchestrator pre-flight):**
+
+The pipeline needs *somewhere* to run build commands (`npm install`, `pytest`, `mypy`, etc.). The orchestrator's Step 3 detects the best available tier on the user's machine:
+
+1. **Docker dev container (Tier 1)** — the `Dockerfile` and `docker-compose.yml` at the repo root provide a Node 20 + Python 3.11 + `uv` container. The user runs `docker compose up -d` and the agent wraps build commands with `docker compose exec -T dev <command>`. Preferred for consistency across machines.
+
+2. **Host-native tools (Tier 2)** — if Docker isn't installed but the host has the tools the spec needs (Node 20+, Python 3.11+, `uv`), the agent runs build commands directly on the host shell. Common case for developers with prior toolchain installs.
+
+3. **GitHub Codespaces (Tier 3)** — if neither Docker nor host tools are available, the orchestrator halts at Step 3 and surfaces a Codespaces URL. The repo ships `.devcontainer/devcontainer.json` pre-configured (Node 20, Python 3.11, `uv`, Claude Code extension auto-installed) so Codespaces opens with everything ready in ~30 seconds. **This is the no-install path — the canonical Tricentis business-user case.**
+
+The orchestrator agent receives the chosen tier via Step 4's briefing and adjusts its command wrappers accordingly. Pipeline pre-flight runs inside whichever environment was selected (the Tier 1 container, the host shell, or — for Tier 3 — the Codespace after the user re-invokes `/orchestrator`).
 
 **Dev servers must bind to `0.0.0.0`, not `localhost`.** Inside the Docker dev container, binding to `localhost` (Vite's default, and the default for many frameworks) listens only on the container's loopback — the host's browser can't reach the published port even though `docker-compose.yml` maps `5173:5173`. Scaffolded `vite.config.ts` must include `server.host: '0.0.0.0'`. Any uvicorn or other Python HTTP server in the quick-start instructions must use `--host 0.0.0.0`. The reviewer flags any dev config or README quick-start that binds to localhost as a required change.
 

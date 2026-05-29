@@ -1,0 +1,31 @@
+{
+  "name": "Claude Code Pipeline",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+
+  "//": "The universal:2 image ships with Node 20+, Python 3.11+, git, and most common dev tools pre-installed. Big image (~5GB) but zero setup time per Codespace and zero risk of missing tools at pre-flight.",
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "postCreateCommand": "pip install --user uv && ~/.local/bin/uv tool install pytest && ~/.local/bin/uv tool install mypy && ~/.local/bin/uv tool install ruff && echo 'Dev environment ready. Open Claude Code (left sidebar) and run /business-intake or /orchestrator.'",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "forwardPorts": [5173, 8000],
+  "portsAttributes": {
+    "5173": { "label": "Vite dev server" },
+    "8000": { "label": "FastAPI / Python HTTP" }
+  },
+
+  "remoteUser": "codespace"
+}
