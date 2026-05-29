@@ -94,6 +94,32 @@ If the pipeline halted mid-flight (self-update flagged a protected-tier change r
 - Exactly what's needed to unblock
 - What the user should run next (e.g., `/jira-ticket docs/self-update-<date>-<slug>.md`, manual branch review, fixing a missing runtime, etc.)
 
+## Step 6: Auto-invoke usage-report
+
+After surfacing the results in Step 5, **automatically invoke the `usage-report` skill via the Skill tool**. This gives the user a session-end cost / token breakdown plus recommendations without requiring them to remember to run `/usage-report` manually.
+
+Before invoking, tell the user in one line:
+
+> "Pipeline run complete — generating the usage report now. I'll ask you to paste `/usage` output, then write the report with recommendations."
+
+Then invoke:
+
+```
+Skill(
+  skill: "usage-report",
+  args: "post-orchestrator-run; spec=<spec-name-from-Step-1>"
+)
+```
+
+The `args` string is a hint, not a contract — usage-report uses it to derive the short-name for the output file (e.g., a spec at `docs/refund-router.md` produces `docs/usage-<YYYY-MM-DD>-refund-router.md`) and to skip asking the user "what was this session about." If the spec name doesn't translate cleanly, usage-report falls back to asking the user.
+
+**When to skip Step 6:**
+
+- If pre-flight failed before the orchestrator agent ran (Step 2 or Step 3 halted), skip — there's nothing meaningful to report. Tell the user: *"Skipping the usage report — the pipeline halted at pre-flight before doing significant work. Run `/usage-report` manually if you want to see the pre-flight cost anyway."*
+- If the user explicitly said "skip the usage report" in this session, honor that. Acknowledge: *"Skipping the auto usage report as you requested. You can run `/usage-report` manually any time."*
+
+Otherwise, the auto-invoke fires regardless of whether the pipeline completed cleanly or halted mid-flight. A partial-run cost report is just as useful as a complete-run report for identifying expensive failure modes.
+
 ## Notes
 
 - This command is a thin wrapper. The orchestrator agent (`.claude/agents/orchestrator.md`) holds the pipeline logic, retry budgets, and escalation rules. Keep both in sync: if pipeline order or retry budgets change in the agent file, update Step 3's briefing here.

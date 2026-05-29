@@ -151,6 +151,7 @@ Specs name capabilities; Opus binds capability to agent at runtime. The current 
 | Capture business requirements | `business-intake` | (skill, no agent) | Tricentis-flow entry for non-technical users. Plain-language interview → business proposal + brief → invokes `spec-writer` with `--brief`. |
 | Write a spec | `spec-writer` | `spec-writer-brief-driven` (brief-driven mode only) | Interactive tracks (technical / business): section-by-section interview in the skill, no agent. Brief-driven mode: skill wrapper spawns `spec-writer-brief-driven` (pinned to Opus via agent frontmatter) for silent reasoning. Both modes produce `docs/<name>.md` + `docs/<name>-decisions.md`. |
 | Pick architecture pattern | `architecture-pattern-selector` | (skill, no agent) | Matches workload signals (consumer, UI needed, kind of work, data shape, who triggers) against the pattern catalog. Used by `spec-writer-brief-driven` and by the interactive business track. Supports multi-pattern pairings. |
+| Report session usage | `usage-report` | (skill, no agent) | Generates a post-session report with time, tokens, cost, per-phase breakdown, and team-specific recommendations. Reads from `/usage` (user pastes the output). Writes `docs/usage-<YYYY-MM-DD>-<short-name>.md`. |
 | Validate scope | — | pm | Returns READY / NEEDS CLARIFICATION / OUT OF SCOPE |
 | Design approach | — | architect | Produces file plan + interface contracts |
 | Audit system | — | self-update | Stages protected changes + writes JIRA artifact |
