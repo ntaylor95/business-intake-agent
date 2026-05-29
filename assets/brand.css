@@ -1,0 +1,208 @@
+/* ============================================
+   TRICENTIS-INSPIRED STYLESHEET
+   ============================================
+
+   Source of truth for brand visual values. Imported directly by scaffolded
+   React apps — the executor agent should NOT duplicate or re-define these
+   in component styles.
+
+   When scaffolding a new React app, the convention is:
+     1. Copy this file into the app: cp assets/brand.css <app>/src/styles/brand.css
+     2. Import it in the app's entry point: import './styles/brand.css'
+     3. Reference colors via custom properties: color: var(--color-navy)
+     4. Use existing component classes where applicable: className="btn-primary"
+
+   Companion: docs/design.md — explains WHEN to use which token, brand rules,
+   accessibility notes, and CTA hierarchy.
+*/
+
+/* --- Google Font Import --- */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap');
+
+/* --- COLOR PALETTE --- */
+:root {
+  --color-navy:     #1b365d;   /* Primary dark — headings, body text */
+  --color-orange:   #ff6c0e;   /* CTA accent — primary buttons */
+  --color-sky:      #59c8e6;   /* Highlight accent — links, H2, badges */
+  --color-light:    #f5f8fc;   /* Background neutral — sections, cards */
+  --color-white:    #ffffff;
+  --color-muted:    #8596aa;   /* Subtext, captions */
+  --color-dark:     #343941;   /* Body copy on light bg */
+}
+
+/* --- RESET / BASE --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Open Sans', Calibri, Tahoma, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-dark);
+  background-color: var(--color-white);
+}
+
+/* --- HEADINGS --- */
+h1, h2, h3 {
+  font-family: 'Open Sans', Calibri, Tahoma, sans-serif;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-navy);
+  margin-bottom: 0.5em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4.4rem);   /* ~71px at full width */
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-navy);
+}
+
+h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem); /* ~20–28px */
+  font-weight: 700;
+  color: var(--color-sky);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+h3 {
+  font-size: 1.25rem;   /* 20px */
+  font-weight: 700;
+  color: var(--color-navy);
+  line-height: 1.5;
+}
+
+/* --- BODY COPY & UTILITY TEXT --- */
+p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-dark);
+  margin-bottom: 1rem;
+}
+
+.text-muted {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.text-small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* --- LINKS --- */
+a {
+  color: var(--color-sky);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-orange);
+}
+
+/* --- BUTTONS --- */
+
+/* Primary — Orange CTA */
+.btn-primary {
+  display: inline-block;
+  background-color: var(--color-orange);
+  color: var(--color-white);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 12px 44px;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: #e05800;
+  color: var(--color-white);
+  transform: translateY(-1px);
+}
+
+/* Secondary — Navy outline */
+.btn-secondary {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--color-navy);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 11px 40px;
+  border: 2px solid var(--color-navy);
+  border-radius: 0;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+/* Ghost — Sky blue for dark backgrounds */
+.btn-ghost {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--color-sky);
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 11px 40px;
+  border: 2px solid var(--color-sky);
+  border-radius: 0;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-sky);
+  color: var(--color-navy);
+}
+
+/* Text/Arrow link style (like "LEARN MORE →") */
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.btn-text::after {
+  content: '→';
+}
+
+.btn-text:hover {
+  gap: 12px;
+  color: var(--color-orange);
+}

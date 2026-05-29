@@ -1,0 +1,14 @@
+.git
+.gitignore
+.DS_Store
+node_modules
+*/node_modules
+.env
+.env.*
+dist
+build
+.vscode
+.idea
+
+# Self-update artifacts are user output, not relevant to the image build.
+docs/self-update-*.md

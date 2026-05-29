@@ -1,0 +1,72 @@
+# ============================================
+# Environment files — NEVER commit secrets
+# ============================================
+.env
+.env.local
+.env.*.local
+# .env.example IS committed — it documents required vars with placeholder values
+
+# ============================================
+# Node / npm / Vite
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.vite/
+
+# ============================================
+# Python / uv
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.uv-cache/
+
+# ============================================
+# Claude Code / local settings
+# ============================================
+.claude/settings.local.json
+
+# Self-update artifacts are generated; not part of source. Comment this out
+# if you want to keep them in git for history.
+docs/self-update-*.md
+
+# ============================================
+# IDE / OS junk
+# ============================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============================================
+# Build / test outputs
+# ============================================
+*.log
+coverage/
+.coverage
+htmlcov/
+.tox/
+
+# docs/archived
+
+# ============================================
+# agent generated repos
+# ============================================
+# skill-sharing-portal/*
+
