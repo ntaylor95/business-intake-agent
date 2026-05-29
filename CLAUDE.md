@@ -281,6 +281,25 @@ The spec-writer skill asks this during the interview whenever backend work is in
   - **React + Vite:** use `import.meta.env.VITE_*` (Vite's built-in env handling). Only `VITE_`-prefixed vars are exposed to client code — anything else is server-only.
 - **`.gitignore`:** the seed repo's `.gitignore` already excludes `.env`, `.env.local`, and `.env.*.local`. Don't weaken this.
 
+### Multi-component projects: `.env` path resolution
+
+When the project has multiple Python components in subdirectories (`job/`, `api/`, etc.) sharing a single root-level `.env`, **never use a bare `env_file: ".env"`**. That string resolves relative to the process's working directory — so `cd job && uv run python main.py` looks for `job/.env`, which doesn't exist, and pydantic-settings silently skips loading it, causing a `ValidationError` on required fields at startup.
+
+**Always resolve relative to `__file__`:**
+
+```python
+from pathlib import Path
+
+_HERE = Path(__file__).parent
+# Prefer a component-local .env if present; fall back to the repo root.
+_ENV_FILE = str(_HERE / ".env") if (_HERE / ".env").exists() else str(_HERE.parent / ".env")
+
+class Settings(BaseSettings):
+    model_config = {"env_file": _ENV_FILE, "env_file_encoding": "utf-8"}
+```
+
+This works correctly regardless of which directory the user runs from. The fallback chain (`component/.env` → `repo-root/.env`) also allows per-component overrides when needed.
+
 ### What goes in `.env.example`
 
 Anything the team needs to fill in for the user, including but not limited to:
