@@ -1,5 +1,18 @@
 {
   "model": "claude-sonnet-4-6",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\n%s\\n\\n%s\\n%s\\n%s\\n\\n%s\\n\\n' '👋 Welcome — this seed runs the business-intake → spec-writer → orchestrator pipeline.' 'Quick start:' '  /business-intake   (recommended — plain-language interview, drafts proposal + spec for you)' '  /spec-writer       (alternative — section-by-section spec authoring)' 'Type one of those to begin.'"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Read(**)",

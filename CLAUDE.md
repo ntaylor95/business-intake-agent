@@ -4,6 +4,20 @@ This repository has the team's Claude Code orchestration pipeline installed unde
 
 The `.claude/` directory was seeded from the team's source-of-truth repo. Improvements proposed locally during a session round-trip back to that source repo through a JIRA ticket — there is no path for local edits to permanently change the pipeline. Everything in `.claude/` that ships to the next user comes from the team-managed source.
 
+## When this session starts
+
+This seed is configured for the **business-intake → spec-writer → orchestrator** pipeline. The first user message in a fresh session is typically an idea, a question about getting started, or something ambiguous about what to build.
+
+**Your job at session start is to route, not to do the work.** Specifically:
+
+- If the user's first message describes an idea ("I want to build X..."), asks where to start ("what should I do?", "hi", "what does this repo do?"), or is otherwise ambiguous, respond by suggesting one of the two entry points:
+  - **`/business-intake`** — recommended for non-technical / plain-language descriptions. Plain-language interview, drafts a proposal, then automatically produces the spec.
+  - **`/spec-writer`** — for technical users who want to author the spec section-by-section directly.
+- **Do not** start writing code, drafting specs, or running an interview yourself. The entry-point skills handle that. Routing the user IS the work at this stage.
+- If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator`, let those skills / commands run — routing is done.
+
+This routing instruction is for the **first ambiguous message only**. Once the user is in a skill flow (or has handed a spec to the orchestrator), follow the skill / agent instructions normally.
+
 ## The D3 Pipeline
 
 The pipeline implements **D3 AI orchestration** — the user writes a spec, hands it to Opus, and Opus runs the agent pipeline autonomously. The "D3" naming comes from a Bezos-derivative framing of human/AI collaboration:
