@@ -2,7 +2,7 @@
 name: tester
 description: Runs and writes unit tests against code produced by the executor agent. Invoke after executor completes, or any time code needs to be tested. Validates that code meets spec success criteria. Reports pass/fail with details and hands off to reviewer if tests pass.
 model: sonnet
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(./localdev/remote.py:*), Bash(npm:*), Bash(npx:*), Bash(pnpm:*), Bash(yarn:*), Bash(jest:*), Bash(vitest:*), Bash(pytest:*), Bash(python:*), Bash(node:*), Bash(cargo test:*), Bash(go test:*), Bash(./gradlew:*), Bash(mvn:*), Bash(dotnet test:*), Bash(rspec:*), Bash(ls:*), Bash(cat:*), Bash(find:*), Bash(grep:*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(./localdev/remote.py:*), Bash(npm:*), Bash(npx:*), Bash(pnpm:*), Bash(yarn:*), Bash(jest:*), Bash(vitest:*), Bash(pytest:*), Bash(python:*), Bash(uv:*), Bash(node:*), Bash(cargo test:*), Bash(go test:*), Bash(./gradlew:*), Bash(mvn:*), Bash(dotnet test:*), Bash(rspec:*), Bash(ls:*), Bash(cat:*), Bash(find:*), Bash(grep:*)
 ---
 
 # Tester Agent

@@ -2,7 +2,7 @@
 name: orchestrator
 description: Reads a spec and manages the full agent pipeline end-to-end: executor → tester → reviewer → self-update. Invoke when you have a completed spec and want the agent pipeline to run autonomously. Also invoke with /orchestrator for any multi-step task that needs agent coordination. This is the D3 entry point.
 model: sonnet
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Agent
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Agent, Skill
 ---
 
 # Orchestrator Agent
@@ -82,13 +82,15 @@ task_arch    = TaskCreate(subject="Architect: [spec intent]",        activeForm=
 task_execute = TaskCreate(subject="Execute: [spec intent]",          activeForm="Writing code")
 task_test    = TaskCreate(subject="Test: [spec intent]",             activeForm="Running tests")
 task_review  = TaskCreate(subject="Review: [spec intent]",           activeForm="Reviewing code")
+task_readme  = TaskCreate(subject="README: [spec intent]",           activeForm="Generating README")
 task_audit   = TaskCreate(subject="Audit: [spec intent]",            activeForm="Running self-update")
 
 TaskUpdate(task_arch.id,    addBlockedBy=[task_pm.id])
 TaskUpdate(task_execute.id, addBlockedBy=[task_arch.id])
 TaskUpdate(task_test.id,    addBlockedBy=[task_execute.id])
 TaskUpdate(task_review.id,  addBlockedBy=[task_test.id])
-TaskUpdate(task_audit.id,   addBlockedBy=[task_review.id])
+TaskUpdate(task_readme.id,  addBlockedBy=[task_review.id])
+TaskUpdate(task_audit.id,   addBlockedBy=[task_readme.id])
 ```
 
 ### Step 2: Run PM
@@ -160,7 +162,25 @@ Invoke the reviewer agent with `mode: "bypassPermissions"` and:
 When reviewer approves:
 TaskUpdate(task_review.id, status="completed")
 
-### Step 7: Run self-update audit
+### Step 7: Generate README
+TaskUpdate(task_readme.id, status="in_progress", owner="readme-skill")
+
+Invoke the readme-skill with the context assembled from the pipeline run:
+- The spec (to answer "why does this code exist" and integration points)
+- All files written by the executor (to discover run/test/build commands, env vars, docker setup)
+- The architect's design output (for architecture section if needed)
+
+Use the Skill tool:
+```
+Skill("readme-skill", args="<project name> — pipeline-generated, do not pause to ask the user questions. For any information that cannot be discovered from the repo (Sentry project, Sumo Logic category, New Relic dashboard URLs, TeamCity/Octopus/ArgoCD links), insert a clearly-marked TODO placeholder rather than asking. The pipeline runs non-interactively.")
+```
+
+The readme-skill writes (or overwrites) `README.md` at the repo root. If a README already exists, the skill updates it — it does not create a second file.
+
+When the README is written:
+TaskUpdate(task_readme.id, status="completed")
+
+### Step 8: Run self-update audit
 TaskUpdate(task_audit.id, status="in_progress", owner="self-update")
 
 Invoke the self-update agent with `mode: "bypassPermissions"` in post-execution mode.
@@ -171,7 +191,7 @@ Wait for self-update report. If changes are staged for human sign-off, surface t
 
 TaskUpdate(task_audit.id, status="completed")
 
-### Step 8: Report completion
+### Step 9: Report completion
 
 Before reporting completion, walk every item in the spec's Success Criteria (Section 3) and the Final Deliverable list from Section 7 (if present). For each item, classify:
 
@@ -203,6 +223,7 @@ Before reporting completion, walk every item in the spec's Success Criteria (Sec
 | Write | executor (+mid-level-engineer) | ✓ | 1 |
 | Test | tester | ✓ EXECUTED, [N passed / 0 failed] | 1 |
 | Review | reviewer | ✓ APPROVED | 1 |
+| README | readme-skill | ✓ WRITTEN | — |
 | Audit | self-update | ✓ | — |
 
 ### Files Changed
