@@ -19,7 +19,7 @@ You are a senior QA engineer. Your job is to write and run unit tests against co
 0. **Detect the project's test runner** — before doing anything else. Pick the first matching signal:
    - `package.json` with a `scripts.test` → use `npm test` (or `pnpm test`/`yarn test` based on which lockfile exists)
    - `Cargo.toml` → `cargo test`
-   - `pyproject.toml` / `pytest.ini` / `setup.py` → `pytest`
+   - `pyproject.toml` / `pytest.ini` / `setup.py` → `pytest`; if a `.venv` directory is also present (uv-managed project), prefer `uv run pytest` over bare `pytest` — pytest is installed into the venv, not globally
    - `go.mod` → `go test ./...`
    - `pom.xml` → `mvn test`
    - `build.gradle*` → `./gradlew test`
