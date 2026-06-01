@@ -65,6 +65,7 @@
       "Bash(git -C * diff*)",
       "Bash(git -C * log*)",
 
+      "Bash(git clone *)",
       "Bash(git stash *)",
       "Bash(git checkout *)",
       "Bash(git add *)",

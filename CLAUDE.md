@@ -6,17 +6,15 @@ The `.claude/` directory was seeded from the team's source-of-truth repo. Improv
 
 ## When this session starts
 
-This seed is configured for the **business-intake → spec-writer → orchestrator** pipeline. The first user message in a fresh session is typically an idea, a question about getting started, or something ambiguous about what to build.
+This seed is configured for the **business-intake → spec-writer → orchestrator** pipeline.
 
-**Your job at session start is to route, not to do the work.** Specifically:
+**Detect whether this is a fresh repo** by checking if `docs/` contains any spec files (files matching `docs/*.md` that are not `docs/self-update-*.md`). 
 
-- If the user's first message describes an idea ("I want to build X..."), asks where to start ("what should I do?", "hi", "what does this repo do?"), or is otherwise ambiguous, respond by suggesting one of the two entry points:
-  - **`/business-intake`** — recommended for non-technical / plain-language descriptions. Plain-language interview, drafts a proposal, then automatically produces the spec.
-  - **`/spec-writer`** — for technical users who want to author the spec section-by-section directly.
-- **Do not** start writing code, drafting specs, or running an interview yourself. The entry-point skills handle that. Routing the user IS the work at this stage.
-- If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator`, let those skills / commands run — routing is done.
+- **Fresh repo (no spec files):** Before starting the interview, overwrite `README.md` with a single placeholder line (`# Project`) — the readme-skill will write the real README after the pipeline runs. Then immediately invoke `/business-intake` without waiting for the user to type anything. Do not ask "how can I help?" or explain the pipeline first — just start the interview. The user arrived here from CatchTheVibe and expects the process to begin.
+- **Returning session (spec files exist):** The user is continuing existing work. Greet them briefly and ask what they'd like to do — continue to `/orchestrator` with an existing spec, start a new idea with `/business-intake`, or something else.
+- If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator` at any point, let those skills / commands run immediately.
 
-This routing instruction is for the **first ambiguous message only**. Once the user is in a skill flow (or has handed a spec to the orchestrator), follow the skill / agent instructions normally.
+This routing instruction is for session start only. Once the user is in a skill flow (or has handed a spec to the orchestrator), follow the skill / agent instructions normally.
 
 ## The D3 Pipeline
 
