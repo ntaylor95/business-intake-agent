@@ -42,9 +42,13 @@ The pipeline implements **D3 AI orchestration** — the user writes a spec, hand
 Canonical flow:
 
 ```
-spec-writer  →  orchestrator
+spec-writer  →  /orchestrator (build phase)
                     ↓
    pm → architect → executor (+ mid-level-engineer)
+                    ↓
+                 README
+                    ↓
+              /validate (validation phase — requires runtime)
                     ↓
             tester → reviewer
                     ↓
@@ -56,7 +60,7 @@ spec-writer  →  orchestrator
    docs/self-update-<date>.md  →  JIRA ticket  →  source repo
 ```
 
-`.claude/agents/orchestrator.md` is the source of truth for pipeline order, retry budgets (3 executor retries on tester fail, 2 on reviewer fail), and escalation rules. If pipeline order or handoff contracts change, the orchestrator file is updated first — other agent files only describe their own role and won't catch a pipeline-level inconsistency.
+`.claude/agents/orchestrator.md` is the source of truth for the build-phase pipeline order and escalation rules. `.claude/agents/validate.md` is the source of truth for the validation-phase pipeline order, retry budgets (3 executor retries on tester fail, 2 on reviewer fail), and validation escalation rules. If pipeline order or handoff contracts change, the relevant agent file is updated first — other agent files only describe their own role and won't catch a pipeline-level inconsistency.
 
 ### Business-user entry flow (Tricentis seed-repo path)
 
@@ -118,7 +122,7 @@ Five principles shape every decision in this pipeline. When something feels ambi
 
 1. **Specs reference capability, not specific agents.** Write "executor capability" or "review capability," not `ExecutorAgent` by name. This keeps specs durable as the agent roster evolves — Opus maps capability → agent at runtime. The spec-writer skill enforces this in Section 5 (Task Decomposition).
 
-2. **Success criteria must be measurable.** If Opus can't run a check that returns pass or fail, it's not a criterion — it's a wish. "Performs well" is rejected by the PM agent; "p95 latency under 200ms" is accepted. The orchestrator's Step 8 verification only counts a criterion as `VERIFIED` if it produced an exit-code-0 evidence trail.
+2. **Success criteria must be measurable.** If Opus can't run a check that returns pass or fail, it's not a criterion — it's a wish. "Performs well" is rejected by the PM agent; "p95 latency under 200ms" is accepted. The validate agent's Step 5 verification only counts a criterion as `VERIFIED` if it produced an exit-code-0 evidence trail.
 
 3. **Failure modes are what make this D3.** D2 specs tell agents what to do. D3 specs tell agents what to do when things go wrong. A spec with no Section 4 failure modes is a D2 spec masquerading as D3 — bounce it back.
 
@@ -161,6 +165,8 @@ Specs name capabilities; Opus binds capability to agent at runtime. The current 
 | Report session usage | `usage-report` | (skill, no agent) | Generates a post-session report with time, tokens, cost, per-phase breakdown, and team-specific recommendations. Reads from `/usage` (user pastes the output). Writes `docs/usage-<YYYY-MM-DD>-<short-name>.md`. |
 | Validate scope | — | pm | Returns READY / NEEDS CLARIFICATION / OUT OF SCOPE |
 | Design approach | — | architect | Produces file plan + interface contracts |
+| Run build pipeline | — | orchestrator | Runs pm → architect → executor → README. No runtime required. Invoked by `/orchestrator`. |
+| Run validation pipeline | — | validate | Runs tester → reviewer → self-update. Requires a runtime environment. Invoked by `/validate`. |
 | Audit system | — | self-update | Stages protected changes + writes JIRA artifact |
 | File a JIRA ticket | — | jira-ticket (slash command) | User-invoked via `/jira-ticket docs/self-update-<date>-<slug>.md`. Not auto-invoked by orchestrator. |
 
@@ -191,17 +197,17 @@ npm create vite@latest <project-name> -- --template react-ts
 cd <project-name> && npm install
 ```
 
-**Runtime environment (three tiers, automatically detected at orchestrator pre-flight):**
+**Runtime environment (three tiers, automatically detected at `/validate` pre-flight):**
 
-The pipeline needs *somewhere* to run build commands (`npm install`, `pytest`, `mypy`, etc.). The orchestrator's Step 3 detects the best available tier on the user's machine:
+The pipeline needs *somewhere* to run build commands (`npm install`, `pytest`, `mypy`, etc.). The `/validate` command's Step 2 detects the best available tier on the user's machine. Runtime detection does NOT happen in `/orchestrator` — the build phase only writes files and requires no runtime.
 
 1. **Docker dev container (Tier 1)** — the `Dockerfile` and `docker-compose.yml` at the repo root provide a Node 20 + Python 3.11 + `uv` container. The user runs `docker compose up -d` and the agent wraps build commands with `docker compose exec -T dev <command>`. Preferred for consistency across machines.
 
 2. **Host-native tools (Tier 2)** — if Docker isn't installed but the host has the tools the spec needs (Node 20+, Python 3.11+, `uv`), the agent runs build commands directly on the host shell. Common case for developers with prior toolchain installs.
 
-3. **GitHub Codespaces (Tier 3)** — if neither Docker nor host tools are available, the orchestrator halts at Step 3 and surfaces a Codespaces URL. The repo ships `.devcontainer/devcontainer.json` pre-configured (Node 20, Python 3.11, `uv`, Claude Code extension auto-installed) so Codespaces opens with everything ready in ~30 seconds. **This is the no-install path — the canonical Tricentis business-user case.**
+3. **GitHub Codespaces (Tier 3)** — if neither Docker nor host tools are available, `/validate` halts at Step 2 and surfaces a Codespaces URL. The repo ships `.devcontainer/devcontainer.json` pre-configured (Node 20, Python 3.11, `uv`, Claude Code extension auto-installed) so Codespaces opens with everything ready in ~30 seconds. **This is the no-install path — the canonical Tricentis business-user case.**
 
-The orchestrator agent receives the chosen tier via Step 4's briefing and adjusts its command wrappers accordingly. Pipeline pre-flight runs inside whichever environment was selected (the Tier 1 container, the host shell, or — for Tier 3 — the Codespace after the user re-invokes `/orchestrator`).
+The validate agent receives the chosen tier via Step 3's briefing and adjusts its command wrappers accordingly. Validation pre-flight runs inside whichever environment was selected (the Tier 1 container, the host shell, or — for Tier 3 — the Codespace after the user re-invokes `/validate`).
 
 **Dev servers must bind to `0.0.0.0`, not `localhost`.** Inside the Docker dev container, binding to `localhost` (Vite's default, and the default for many frameworks) listens only on the container's loopback — the host's browser can't reach the published port even though `docker-compose.yml` maps `5173:5173`. Scaffolded `vite.config.ts` must include `server.host: '0.0.0.0'`. Any uvicorn or other Python HTTP server in the quick-start instructions must use `--host 0.0.0.0`. The reviewer flags any dev config or README quick-start that binds to localhost as a required change.
 
@@ -395,8 +401,8 @@ When in doubt: ask if the user could meaningfully answer the question. If not, d
 
 When editing one file, these are the things most likely to silently break in another:
 
-- **Pipeline order**: `.claude/agents/orchestrator.md` lists `pm → architect → executor → tester → reviewer → self-update`. Each agent's "Handoff" section names the next agent. Changing one without the others creates a dead-end handoff.
+- **Pipeline order**: `.claude/agents/orchestrator.md` lists `pm → architect → executor → README` (build phase). `.claude/agents/validate.md` lists `tester → reviewer → self-update` (validation phase). Each agent's "Handoff" section names the next agent. Changing one without the others creates a dead-end handoff.
 - **Section numbers**: tester references "Section 3" (success criteria) and "Section 4" (failure modes). Reviewer references "Section 6" (decision points). Renumbering the spec format breaks all of them.
-- **Allowed-tools and orchestrator pre-flight**: if a new runner (e.g., `bun test`) is added to the tester's allowed-tools, the detection signal in the tester's Step 0 and the corresponding pre-flight probe in the orchestrator must be added too.
+- **Allowed-tools and validate pre-flight**: if a new runner (e.g., `bun test`) is added to the tester's allowed-tools, the detection signal in the tester's Step 0 and the corresponding pre-flight probe in the `/validate` command must be added too.
 - **Authority table**: appears in this `CLAUDE.md` and in `.claude/agents/self-update.md`. Both must agree.
 - **JIRA artifact format**: the schema of `docs/self-update-<date>.md` is consumed by `.claude/commands/jira-ticket.md`. If one changes, the other must too.
