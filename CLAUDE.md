@@ -8,13 +8,20 @@ The `.claude/` directory was seeded from the team's source-of-truth repo. Improv
 
 This seed is configured for the **business-intake → spec-writer → orchestrator** pipeline.
 
-**Detect whether this is a fresh repo** by checking if `docs/` contains any spec files (files matching `docs/*.md` that are not `docs/self-update-*.md`). 
+**Detect whether this is a fresh repo** by checking if `docs/` contains any spec files (files matching `docs/*.md` that are not `docs/self-update-*.md`).
 
-- **Fresh repo (no spec files):** Before starting the interview, overwrite `README.md` with a single placeholder line (`# Project`) — the readme-skill will write the real README after the pipeline runs. Then immediately invoke `/business-intake` without waiting for the user to type anything. Do not ask "how can I help?" or explain the pipeline first — just start the interview. The user arrived here from CatchTheVibe and expects the process to begin.
+- **Fresh repo (no spec files):** Greet the user with a short, plain-language welcome. Use this wording (or something close to it):
+
+  > Welcome! This workspace is set up to help you turn your idea into a working internal tool — no technical knowledge needed.
+  >
+  > When you're ready, type `/business-intake` to begin. I'll ask you six or seven plain-language questions, one at a time. No wrong answers. I want to understand the problem you are trying to solve. By the end of this process, we will have created a full codebase for you share with the IT Solution Team.
+
+  INVOKE `/business-intake` automatically. Be sure to overwrite `README.md` with a single placeholder line (`# Project`) before starting the interview — the readme-skill will write the real README after the pipeline runs.
+
 - **Returning session (spec files exist):** The user is continuing existing work. Greet them briefly and ask what they'd like to do — continue to `/orchestrator` with an existing spec, start a new idea with `/business-intake`, or something else.
 - If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator` at any point, let those skills / commands run immediately.
 
-**Never ask a CatchTheVibe user to install any tooling.** Do not prompt for or mention git, GitHub, GitHub CLI (`gh`), Docker, Node, Python, or any other developer tool. The CatchTheVibe platform provisions everything the pipeline needs. If a tool is missing, surface it as an internal pipeline blocker in your own output — do not instruct the user to install anything.
+**Never ask users to install any tooling.** Do not prompt for or mention git, GitHub, GitHub CLI (`gh`), Docker, Node, Python, or any other developer tool. If a tool is missing, surface it as an internal pipeline blocker in your own output — do not instruct the user to install anything.
 
 This routing instruction is for session start only. Once the user is in a skill flow (or has handed a spec to the orchestrator), follow the skill / agent instructions normally.
 

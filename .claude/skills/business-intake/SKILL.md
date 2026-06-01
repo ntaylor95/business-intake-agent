@@ -56,11 +56,7 @@ Open with a single warm prompt, then ask **one question at a time**. Restate the
 
 ### Opening
 
-After the skill triggers, say:
-
-> "Great — I'll ask you a few questions to understand what you want to build, then draft a short proposal you can share with your team. Six or seven plain-language questions, one at a time. No wrong answers, and I won't ask you about technology, login, or any of the 'how it's built' stuff — that gets sorted later. Sound good?"
-
-Wait for confirmation, then begin Question 1.
+After the skill triggers, begin Question 1 immediately. The user has already been oriented by the session-start welcome — do not repeat the orientation or ask for confirmation.
 
 The interview is organized into **sections**. Each section opens with a one-sentence framing so the user knows where the conversation is going. Ask one question at a time within a section. The number of sections (and the number of questions per section) is sized to capture good documentation — not to hit a fixed total — but if the count climbs past ~10 you've likely drifted into spec-writer territory; stop and hand off.
 
@@ -78,16 +74,13 @@ Feeds the **Problem** and **Measure of success** sections of the business propos
 
 Listen for the real pain, who feels it, and the trigger that made them want to solve it now. If the answer is a *solution* rather than a *problem* ("I want a dashboard"), redirect gently: "Got it — and what's the problem the dashboard would solve?"
 
-#### Q1.2 — Users and scope
+After the user responds, restate what they shared in your own words — then ask: "Is there anything else you'd like to add to that?" Wait for their answer (or confirmation they're done) before moving on to Q1.2.
 
-Two parts — capture **role** conversationally, then capture **scope** with `AskUserQuestion` (single-select).
+#### Q1.2 — Scope and scale
 
-First, in plain conversation:
-> "Who is the user? What role or roles will use this app?"
+Use `AskUserQuestion` (single-select, NOT multi):
 
-Record the role(s). Then use `AskUserQuestion` (single-select, NOT multi):
-
-> "And what's the scope — who is this for?"
+> "Who is this app for?"
 
 Options:
 - **Company** — anyone at the company could use this
@@ -95,7 +88,7 @@ Options:
 - **Department** — a few teams within an organization
 - **Team** — a single team
 
-The scope is one of signals `spec-writer` will use to infer the criticality tier downstream:
+The scope is one of the signals `spec-writer` will use to infer the criticality tier downstream:
 
 | Scope | Likely criticality |
 |---|---|
@@ -105,6 +98,16 @@ The scope is one of signals `spec-writer` will use to infer the criticality tier
 | Team | Likely Green |
 
 **Do NOT mention Red / Yellow / Green to the user.** You're capturing the scope signal; `spec-writer` makes the criticality call.
+
+Then follow up in plain conversation:
+> "And roughly how many users do you expect?"
+
+Rough numbers are fine. If the scope and the user-count feel mismatched (e.g., "Company" but "ten people"), note it and ask which is closer to reality. Record both the scope and the count — they combine to set the scale bracket in the brief.
+
+Then ask about user roles, inserting the scope answer (e.g., "organization", "department", "team") into the question:
+> "What kind of users from your [scope answer] will be using this app? For example: sales reps, managers, data analysts, customer success teams, operations staff, developers — whoever the day-to-day users would be."
+
+Record all roles mentioned. This populates the Primary users field in the brief and the audience section of the business proposal.
 
 #### Q1.3 — Current state
 > "How is this handled today? Manual process, spreadsheet, another tool, or not at all?"
@@ -236,12 +239,7 @@ If yes, record verbatim. Becomes a constraint the PM agent enforces.
 
 Note: SSO is handled by the Tricentis portal post-pipeline, so if the user names an authentication provider here, capture it as a constraint but don't probe further.
 
-#### Q6.3 — Volume / scale
-> "What's the volume or scale you expect? Rough numbers are fine — ten uses a month, a thousand a day, more?"
-
-Combines with the Q1.2 scope to refine the scale bracket. If Q1.2 said "Company" but Q6.3 says "ten uses a month," call out the mismatch and ask which is closer to reality.
-
-> **Note:** operational ownership is no longer asked here — it's derived downstream from the criticality tier (`spec-writer` infers Red / Yellow / Green and maps to the right ownership model).
+> **Note:** volume / scale is now captured in Q1.2 alongside scope. Operational ownership is derived downstream from the criticality tier (`spec-writer` infers Red / Yellow / Green and maps to the right ownership model).
 
 ### Skipping questions the user already answered
 
@@ -268,7 +266,7 @@ As you interview, internally map answers to brief fields. You don't need a separ
 | Brief field | Primary source | Also informed by |
 |---|---|---|
 | Problem statement | Q1.1 | Q1.3, Q1.4 |
-| Primary users (role) | Q1.2 (role part) | volunteered |
+| Primary users (role) | Q1.2 (role question) | volunteered |
 | Scope (Company / Org / Dept / Team) | Q1.2 (scope picker) | — |
 | Current state | Q1.3 | — |
 | Cost of inaction | Q1.4 | — |
@@ -287,7 +285,7 @@ As you interview, internally map answers to brief fields. You don't need a separ
 | Decisions needing human approval | Q5.3 | — |
 | Deadline | Q6.1 | — |
 | Integrations named | Q6.2 | Q2.2, Q3.4, Q4.1 volunteered |
-| Volume / scale bracket | Q6.3 + Q1.2 (scope) | — |
+| Volume / scale bracket | Q1.2 (scope + user count) | — |
 
 If a brief field is empty at the end, decide per field: ask one targeted follow-up, or leave it empty and let `spec-writer` infer or flag it.
 
