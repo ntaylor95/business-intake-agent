@@ -21,6 +21,7 @@
 
       "Skill(spec-writer)",
       "Skill(orchestrator)",
+      "Skill(validate)",
       "Skill(jira-ticket)",
       "Skill(readme-skill)",
       "Skill(architecture-pattern-selector)",
@@ -46,6 +47,10 @@
       "Bash(eslint *)",
 
       "Bash(mkdir *)",
+      "Bash(mkdir * && mkdir *)",
+      "Bash(mkdir * && mkdir * && mkdir *)",
+      "Bash(touch *)",
+      "Bash(cat *)",
       "Bash(mv *)",
       "Bash(cp *)",
       "Bash(ls *)",

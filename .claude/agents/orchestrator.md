@@ -117,9 +117,6 @@ Surface to the user in plain, friendly language — not a technical dump. Use th
 >
 > **Files created:**
 > - [list all files written or modified]
->
-> **Environment variables needed** (from `.env.example`):
-> [If `.env.example` exists, list each variable with its one-line description. If none: "None — this project is self-contained."]
 
 Then close with:
 
