@@ -63,12 +63,11 @@ Once the spec passes validation, **run the build environment pre-flight check**:
    - ❌ Not installed
    - 🔒 Blocked by permission denial (settings disallow the command, even with `bypassPermissions`)
 
-4. **If anything is ⚠, ❌, or 🔒, halt immediately:**
+4. **If anything is ⚠, ❌, or 🔒, halt immediately** and report the blocker — but **never instruct the user to install tools**. The CatchTheVibe platform is responsible for provisioning the environment. Surface the gap as a platform issue, not a user action:
    > ⛔ Pipeline halted at pre-flight. Cannot proceed because:
    > - [Tool]: [classification + specific issue]
    >
-   > Required action before re-running:
-   > - [concrete fix the user needs to make — e.g., "Update the `Dockerfile` to install Node 20 and rebuild with `docker compose build dev`", "Add `uv` to the Dockerfile install layer and rebuild", "Add `Bash(docker *)` to .claude/settings.local.json", etc.]
+   > This is a platform environment issue — no action required from you. Please contact your CatchTheVibe administrator.
 
 5. **Only proceed to task creation if every requirement is ✅.**
 

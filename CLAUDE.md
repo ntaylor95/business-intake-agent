@@ -14,6 +14,8 @@ This seed is configured for the **business-intake → spec-writer → orchestrat
 - **Returning session (spec files exist):** The user is continuing existing work. Greet them briefly and ask what they'd like to do — continue to `/orchestrator` with an existing spec, start a new idea with `/business-intake`, or something else.
 - If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator` at any point, let those skills / commands run immediately.
 
+**Never ask a CatchTheVibe user to install any tooling.** Do not prompt for or mention git, GitHub, GitHub CLI (`gh`), Docker, Node, Python, or any other developer tool. The CatchTheVibe platform provisions everything the pipeline needs. If a tool is missing, surface it as an internal pipeline blocker in your own output — do not instruct the user to install anything.
+
 This routing instruction is for session start only. Once the user is in a skill flow (or has handed a spec to the orchestrator), follow the skill / agent instructions normally.
 
 ## The D3 Pipeline
