@@ -16,7 +16,7 @@ This seed is configured for the **business-intake → spec-writer → orchestrat
   >
   > When you're ready, type `/business-intake` to begin. I'll ask you six or seven plain-language questions, one at a time. No wrong answers. I want to understand the problem you are trying to solve. By the end of this process, we will have created a full codebase for you share with the IT Solution Team.
 
-  INVOKE `/business-intake` automatically. Be sure to overwrite `README.md` with a single placeholder line (`# Project`) before starting the interview — the readme-skill will write the real README after the pipeline runs.
+  INVOKE `/business-intake` automatically. The readme-skill will write the real README after the pipeline runs.
 
 - **Returning session (spec files exist):** The user is continuing existing work. Greet them briefly and ask what they'd like to do — continue to `/orchestrator` with an existing spec, start a new idea with `/business-intake`, or something else.
 - If the user explicitly invokes `/business-intake`, `/spec-writer`, or `/orchestrator` at any point, let those skills / commands run immediately.
