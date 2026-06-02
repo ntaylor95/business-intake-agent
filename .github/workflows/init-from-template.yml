@@ -21,15 +21,17 @@ jobs:
           COUNT=$(git rev-list --count HEAD)
           echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
-      - name: Clear README
+      - name: Remove template README and create blank
         if: steps.check.outputs.commit_count == '1'
-        run: echo "# Project" > README.md
+        run: |
+          git rm README.md
+          echo "# Project" > README.md
+          git add README.md
 
-      - name: Commit cleared README
+      - name: Commit
         if: steps.check.outputs.commit_count == '1'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
           git commit -m "Initialize repository from template"
           git push
