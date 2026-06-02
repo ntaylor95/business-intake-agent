@@ -15,23 +15,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if this is the initial commit
-        id: check
+      - name: Initialize README
         run: |
-          COUNT=$(git rev-list --count HEAD)
-          echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: Remove template README and create blank
-        if: steps.check.outputs.commit_count == '1'
-        run: |
-          git rm README.md
+          if [ "$(git rev-list --count HEAD)" != "1" ]; then
+            exit 0
+          fi
           echo "# Project" > README.md
-          git add README.md
-
-      - name: Commit
-        if: steps.check.outputs.commit_count == '1'
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "Initialize repository from template"
+          git add README.md
+          git diff --cached --quiet || git commit -m "Initialize repository from template"
           git push
