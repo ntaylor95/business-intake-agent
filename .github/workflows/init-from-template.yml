@@ -1,0 +1,35 @@
+name: Initialize from template
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if this is the initial commit
+        id: check
+        run: |
+          COUNT=$(git rev-list --count HEAD)
+          echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Clear README
+        if: steps.check.outputs.commit_count == '1'
+        run: echo "# Project" > README.md
+
+      - name: Commit cleared README
+        if: steps.check.outputs.commit_count == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Initialize repository from template"
+          git push
